@@ -34,7 +34,7 @@ type Subscriber struct {
 	connection *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan []byte
+	send chan Message
 }
 
 // write writes a message with the given message type and payload.
@@ -54,15 +54,16 @@ func (roomSubscription RoomSubscription) readPump() {
 	subscriber.connection.SetReadDeadline(time.Now().Add(pongWait))
 	subscriber.connection.SetPongHandler(func(string) error { subscriber.connection.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, msg, err := subscriber.connection.ReadMessage()
+		var message Message
+		err := subscriber.connection.ReadJSON(&message)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		m := message{msg, roomSubscription.roomId, ""} // TODO : add senderId 
-		h.broadcast <- m
+		message.RoomId = roomSubscription.roomId
+		h.broadcast <- message
 	}
 }
 
@@ -83,7 +84,7 @@ func (roomSubscription *RoomSubscription) writePump() {
 				subscriber.write(websocket.CloseMessage, []byte{})
 				return
 			}
-			if err := subscriber.write(websocket.TextMessage, message); err != nil {
+			if err := subscriber.connection.WriteJSON(message); err != nil {
 				return
 			}
 		case <-ticker.C:
@@ -102,7 +103,7 @@ func serveWs(w http.ResponseWriter, r *http.Request, roomId string) {
 		log.Println(err.Error())
 		return
 	}
-	subscriber := &Subscriber{send: make(chan []byte, 256), connection: ws}
+	subscriber := &Subscriber{send: make(chan Message, 256), connection: ws}
 	roomSubscription := RoomSubscription{subscriber, roomId}
 	h.register <- roomSubscription
 	go roomSubscription.writePump()

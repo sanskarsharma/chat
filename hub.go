@@ -1,9 +1,9 @@
 package main
 
-type message struct {
-	data []byte
-	roomId string
-	senderId string
+type Message struct {
+	Data string `json:"data"`
+	RoomId string `json:"room_id"`
+	SenderId string `json:"sender_id"`
 }
 
 type RoomSubscription struct {
@@ -18,7 +18,7 @@ type hub struct {
 	rooms map[string]map[*Subscriber]bool
 
 	// Inbound messages from the connections.
-	broadcast chan message
+	broadcast chan Message
 
 	// Register requests from the connections.
 	register chan RoomSubscription
@@ -28,7 +28,7 @@ type hub struct {
 }
 
 var h = hub{
-	broadcast:  make(chan message),
+	broadcast:  make(chan Message),
 	register:   make(chan RoomSubscription),
 	unregister: make(chan RoomSubscription),
 	rooms:      make(map[string]map[*Subscriber]bool),
@@ -56,15 +56,15 @@ func (h *hub) run() {
 				}
 			}
 		case m := <-h.broadcast:
-			subscribers := h.rooms[m.roomId]
+			subscribers := h.rooms[m.RoomId]
 			for c := range subscribers {
 				select {
-				case c.send <- m.data:
+				case c.send <- m:
 				default:
 					close(c.send)
 					delete(subscribers, c)
 					if len(subscribers) == 0 {
-						delete(h.rooms, m.roomId)
+						delete(h.rooms, m.RoomId)
 					}
 				}
 			}

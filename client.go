@@ -9,14 +9,11 @@ import (
 )
 
 const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
+	// Send pings to peer with this period
+	pingPeriod = 10 * time.Second
+	
+	// Time allowed to read the next ping message from the peer. Must be a greater than pingPeriod
+	pongWait = (pingPeriod * 11) / 10
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
@@ -32,29 +29,27 @@ var upgrader = websocket.Upgrader{
 
 // connection is an middleman between the websocket connection and the hub.
 type Subscriber struct {
-	// The websocket connection.
-	connection *websocket.Conn
-
-	// Buffered channel of outbound messages.
-	send chan Message
+	connection *websocket.Conn // The websocket connection.
+	send chan Message // Buffered channel of messages to be written to connection (i.e websocket)
+	roomId string
 }
 
-// write writes a message with the given message type and payload.
-func (c *Subscriber) write(mt int, payload []byte) error {
-	c.connection.SetWriteDeadline(time.Now().Add(writeWait))
-	return c.connection.WriteMessage(mt, payload)
-}
-
-// readPump pumps messages from the websocket connection to the hub.
-func (roomSubscription RoomSubscription) readPump() {
-	subscriber := roomSubscription.subscriber
+// readPump pumps messages from the websocket connection to the hub. i.e from client to server/hub
+func (subscriber *Subscriber) websocketReader() {
 	defer func() {
-		h.unregister <- roomSubscription
+		h.unregister <- subscriber
 		subscriber.connection.Close()
 	}()
 	subscriber.connection.SetReadLimit(maxMessageSize)
 	subscriber.connection.SetReadDeadline(time.Now().Add(pongWait))
-	subscriber.connection.SetPongHandler(func(string) error { subscriber.connection.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
+	// setting pong handler function to respond to ping messages 
+	subscriber.connection.SetPongHandler(func(string) error { 
+		// extending read deadline of websocket connection on receiving the ping message
+		subscriber.connection.SetReadDeadline(time.Now().Add(pongWait))
+		return nil 
+	})
+
 	for {
 		var message Message
 		err := subscriber.connection.ReadJSON(&message)
@@ -64,33 +59,37 @@ func (roomSubscription RoomSubscription) readPump() {
 			}
 			break
 		}
-		message.RoomId = roomSubscription.roomId
+		message.RoomId = subscriber.roomId
 		h.broadcast <- message
 	}
 }
 
 
+// websocketWriter pumps messages from the hub to the websocket connection. i.e from server to client
+func (subscriber *Subscriber) websocketWriter() {
 
-// writePump pumps messages from the hub to the websocket connection.
-func (roomSubscription *RoomSubscription) writePump() {
-	subscriber := roomSubscription.subscriber
+	// starting a ticker to periodically send ping messages to peers
 	ticker := time.NewTicker(pingPeriod)
+
 	defer func() {
 		ticker.Stop()
 		subscriber.connection.Close()
 	}()
+
 	for {
 		select {
 		case message, ok := <-subscriber.send:
 			if !ok {
-				subscriber.write(websocket.CloseMessage, []byte{})
+				subscriber.connection.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 			if err := subscriber.connection.WriteJSON(message); err != nil {
 				return
 			}
 		case <-ticker.C:
-			if err := subscriber.write(websocket.PingMessage, []byte{}); err != nil {
+			// extending write deadline and sending ping message
+			subscriber.connection.SetWriteDeadline(time.Now().Add(pingPeriod)) 
+			if err := subscriber.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
 		}
@@ -104,9 +103,10 @@ func serveWs(w http.ResponseWriter, r *http.Request, roomId string) {
 		log.Println(err.Error())
 		return
 	}
-	subscriber := &Subscriber{send: make(chan Message, 256), connection: ws}
-	roomSubscription := RoomSubscription{subscriber, roomId}
-	h.register <- roomSubscription
-	go roomSubscription.writePump()
-	go roomSubscription.readPump()
+	subscriber := &Subscriber{send: make(chan Message, 256), connection: ws, roomId: roomId}
+	h.register <- subscriber
+
+	// spiing up 2 go-routines per client. one for reading from webso
+	go subscriber.websocketReader() // for reading from websocket and broadcasting to hub
+	go subscriber.websocketWriter() // for reading from send channel and writing to websocket
 }

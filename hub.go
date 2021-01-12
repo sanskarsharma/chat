@@ -6,13 +6,7 @@ type Message struct {
 	SenderId string `json:"sender_id"`
 }
 
-type RoomSubscription struct {
-	subscriber *Subscriber
-	roomId string
-}
-
-// hub maintains the set of active connections and broadcasts messages to the
-// connections.
+// hub maintains the set of active connections and broadcasts messages to the connections.
 type hub struct {
 	// Registered connections.
 	rooms map[string]map[*Subscriber]bool
@@ -21,37 +15,37 @@ type hub struct {
 	broadcast chan Message
 
 	// Register requests from the connections.
-	register chan RoomSubscription
+	register chan *Subscriber
 
 	// Unregister requests from connections.
-	unregister chan RoomSubscription
+	unregister chan *Subscriber
 }
 
 var h = hub{
 	broadcast:  make(chan Message),
-	register:   make(chan RoomSubscription),
-	unregister: make(chan RoomSubscription),
+	register:   make(chan *Subscriber),
+	unregister: make(chan *Subscriber),
 	rooms:      make(map[string]map[*Subscriber]bool),
 }
 
 func (h *hub) run() {
 	for {
 		select {
-		case roomSubscription := <-h.register:
-			subscribers := h.rooms[roomSubscription.roomId]
-			if subscribers == nil {
-				subscribers = make(map[*Subscriber]bool)
-				h.rooms[roomSubscription.roomId] = subscribers
+		case subscriber := <-h.register:
+			roomSubscribers := h.rooms[subscriber.roomId]
+			if roomSubscribers == nil {
+				roomSubscribers = make(map[*Subscriber]bool)
+				h.rooms[subscriber.roomId] = roomSubscribers
 			}
-			h.rooms[roomSubscription.roomId][roomSubscription.subscriber] = true
-		case roomSubscription := <-h.unregister:
-			subscribers := h.rooms[roomSubscription.roomId]
-			if subscribers != nil {
-				if _, ok := subscribers[roomSubscription.subscriber]; ok {
-					delete(subscribers, roomSubscription.subscriber)
-					close(roomSubscription.subscriber.send)
-					if len(subscribers) == 0 {
-						delete(h.rooms, roomSubscription.roomId)
+			h.rooms[subscriber.roomId][subscriber] = true
+		case subscriber := <-h.unregister:
+			roomSubscribers := h.rooms[subscriber.roomId]
+			if roomSubscribers != nil {
+				if _, ok := roomSubscribers[subscriber]; ok {
+					delete(roomSubscribers, subscriber)
+					close(subscriber.send)
+					if len(roomSubscribers) == 0 {
+						delete(h.rooms, subscriber.roomId)
 					}
 				}
 			}

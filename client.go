@@ -60,6 +60,7 @@ func (subscriber *Subscriber) websocketReader() {
 			break
 		}
 		message.RoomId = subscriber.roomId
+		message.SentAt = time.Now()
 		h.broadcast <- message
 	}
 }
@@ -106,7 +107,7 @@ func serveWs(w http.ResponseWriter, r *http.Request, roomId string) {
 	subscriber := &Subscriber{send: make(chan Message, 256), connection: ws, roomId: roomId}
 	h.register <- subscriber
 
-	// spiing up 2 go-routines per client. one for reading from webso
+	// spiing up 2 go-routines per client
 	go subscriber.websocketReader() // for reading from websocket and broadcasting to hub
 	go subscriber.websocketWriter() // for reading from send channel and writing to websocket
 }

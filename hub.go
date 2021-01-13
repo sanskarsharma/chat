@@ -1,9 +1,13 @@
 package main
+import (
+	"time"
+)
 
 type Message struct {
 	Data string `json:"data"`
 	RoomId string `json:"room_id"`
 	SenderId string `json:"sender_id"`
+	SentAt time.Time `json:"sent_at"`
 }
 
 // hub maintains the set of active connections and broadcasts messages to the connections.

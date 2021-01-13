@@ -32,11 +32,19 @@ type Subscriber struct {
 	connection *websocket.Conn // The websocket connection.
 	send chan Message // Buffered channel of messages to be written to connection (i.e websocket)
 	roomId string
+	id string
 }
 
 // readPump pumps messages from the websocket connection to the hub. i.e from client to server/hub
 func (subscriber *Subscriber) websocketReader() {
 	defer func() {
+		leavingMessage := Message{
+			LeavingChat: true,
+			RoomId: subscriber.roomId,
+			SenderId: subscriber.id,
+			SentAt: time.Now(),
+		}
+		h.broadcast <- leavingMessage
 		h.unregister <- subscriber
 		subscriber.connection.Close()
 	}()
@@ -49,6 +57,14 @@ func (subscriber *Subscriber) websocketReader() {
 		subscriber.connection.SetReadDeadline(time.Now().Add(pongWait))
 		return nil 
 	})
+
+	joiningMessage := Message{
+		JoiningChat: true,
+		RoomId: subscriber.roomId,
+		SenderId: subscriber.id,
+		SentAt: time.Now(),
+	}
+	h.broadcast <- joiningMessage
 
 	for {
 		var message Message
@@ -104,7 +120,7 @@ func serveWs(w http.ResponseWriter, r *http.Request, roomId string) {
 		log.Println(err.Error())
 		return
 	}
-	subscriber := &Subscriber{send: make(chan Message, 256), connection: ws, roomId: roomId}
+	subscriber := &Subscriber{send: make(chan Message, 256), connection: ws, roomId: roomId, id: r.URL.Query().Get("sender_id")}
 	h.register <- subscriber
 
 	// spiing up 2 go-routines per client

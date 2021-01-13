@@ -8,6 +8,9 @@ type Message struct {
 	RoomId string `json:"room_id"`
 	SenderId string `json:"sender_id"`
 	SentAt time.Time `json:"sent_at"`
+	JoiningChat bool `json:"joining_chat"`
+	LeavingChat bool `json:"leaving_chat"`
+
 }
 
 // hub maintains the set of active connections and broadcasts messages to the connections.

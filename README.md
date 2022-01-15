@@ -12,12 +12,17 @@ git clone https://github.com/sanskarsharma/chat.git
 cd chat
 go run *.go
 ```
-### Running via docker
+### Running on docker
 ```bash
 git clone https://github.com/sanskarsharma/chat.git
 cd chat
 docker build -t chat:v-local .
 docker run -d -p 8080:8080 chat:v-local
+```
+
+### Running with reverse proxy and minimal front-end on docker-compose
+```
+docker-compose up -d 
 ```
 
 ## Contributing

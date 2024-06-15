@@ -2,26 +2,23 @@
 
 ## Overview
 
-Wedsocket chat server, without database.
+Wedsocket chat server. Completely ephemeral, no logging/storage on server.
 
 
 ## Usage
-### Running locally
+### Running on local with golang
 ```bash
-git clone https://github.com/sanskarsharma/chat.git
-cd chat
 go run *.go
 ```
 ### Running on docker
 ```bash
-git clone https://github.com/sanskarsharma/chat.git
-cd chat
 docker build -t chat:v-local .
 docker run -d -p 8080:8080 chat:v-local
 ```
 
 ### Running with reverse proxy and minimal front-end on docker-compose
-```
+```bash
+# note : check docker-compose.yaml and modify as required before running this
 docker-compose up -d 
 ```
 

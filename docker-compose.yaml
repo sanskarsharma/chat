@@ -2,15 +2,19 @@ version: '3.8'
 services:
   
   chat:
-    image: sanskarsharma/chat:v0.3.0
+    build: .
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    expose:
+      - 8080
   chat-nginx:
-    image: sanskarsharma/chat-nginx:v0.5.0
+    build: ./nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
+    expose:
+      - 80
     depends_on:
       - chat
 
+networks:
+  default:
+    name: traefik
+    external: true

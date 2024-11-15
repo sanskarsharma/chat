@@ -71,7 +71,7 @@ window.onload = function () {
         let cr = document.getElementById("chat_room");
         cr.innerText = "chat room #" + roomi;
         
-        conn = new ReconnectingWebSocket("ws://" + API_ROOT + "/ws/" + roomi + "?sender_id=" + sessionStorage.getItem("sender_id"), null, {reconnectInterval: 100, maxReconnectInterval: 110, maxReconnectAttempts: 2, timeoutInterval: 1000});
+        conn = new ReconnectingWebSocket("wss://" + API_ROOT + "/ws/" + roomi + "?sender_id=" + sessionStorage.getItem("sender_id"), null, {reconnectInterval: 100, maxReconnectInterval: 110, maxReconnectAttempts: 2, timeoutInterval: 1000});
         conn.onopen = function (evt) {
             let item = document.createElement("div");
             item.innerHTML = "<b>You (" + sessionStorage.getItem("sender_id") + ") are connected.</b>";

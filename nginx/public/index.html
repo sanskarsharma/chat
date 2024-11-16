@@ -1,36 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Chat Example</title>
-    <!-- Latest compiled and minified CSS -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random chat</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js" integrity="sha512-B4skI5FiLurS86aioJx9VfozI1wjqrn6aTdJH+YQUmCZum/ZibPBTX55k5d9XM6EsKePDInkLVrN7vPmJxc1qA==" crossorigin="anonymous"></script>
-
-    <!-- jQuery library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
-    <!-- Popper JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-
-    <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
     <script src="main.js"></script>
-    <style src="main.css" type="text/css"></style>
+    
+    <style>
+        :root {
+            --primary-color: #7C4DFF;
+            --bg-color: #f5f7fb;
+            --chat-bg: #ffffff;
+        }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+
+        .chat-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
+        #chat_room {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            padding: 1rem;
+            margin: 0;
+            flex: 0 0 auto;
+        }
+
+        #log {
+            flex: 1 1 auto;
+            background: var(--chat-bg);
+            margin: 0 1rem;
+            padding: 1rem;
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .form-container {
+            flex: 0 0 auto;
+            padding: 1rem;
+            background: var(--chat-bg);
+            margin: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        #form {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        #msg {
+            flex: 1;
+            border: 2px solid #e1e8ed;
+            border-radius: 25px;
+            padding: 0.75rem 1rem;
+            margin: 0;
+            min-width: 0; /* Prevents flex item from overflowing */
+        }
+
+        #msg:focus {
+            border-color: var(--primary-color);
+            box-shadow: none;
+            outline: none;
+        }
+
+        .btn-dark {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 1.5rem;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        .btn-dark:hover {
+            background-color: #6039cc;
+        }
+
+        /* Custom Scrollbar */
+        #log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #log::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #log::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            #chat_room {
+                font-size: 1.25rem;
+                padding: 0.75rem;
+            }
+
+            #log {
+                margin: 0 0.5rem;
+            }
+
+            .form-container {
+                margin: 0.5rem;
+                padding: 0.75rem;
+            }
+
+            #msg {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .btn-dark {
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        /* Extra Small Devices */
+        @media (max-width: 375px) {
+            #chat_room {
+                font-size: 1.1rem;
+                padding: 0.5rem;
+            }
+
+            #log {
+                margin: 0 0.25rem;
+                padding: 0.5rem;
+            }
+
+            .form-container {
+                margin: 0.25rem;
+                padding: 0.5rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container-fluid">
-        <h2 id="chat_room">chat room </h2>
+    <div class="chat-wrapper">
+        <h2 id="chat_room">Chat Room</h2>
+        <div id="log"></div>
+        <div class="form-container">
+            <form id="form">
+                <input type="text" id="msg" class="form-control" placeholder="Type your message..." autofocus/>
+                <button type="submit" class="btn btn-dark">Send</button>
+            </form>
+        </div>
     </div>
-    <div class="container-fluid pt-4 my-4" id="log"></div>
-    <div class="container-fluid">
-        <form id="form" class="form-inline justify-content-center align-items-center">
-            <input type="text" id="msg" size="64" class="form-control mb-2 mr-sm-2 " autofocus/>
-            <button type="submit" value="Send" class="btn btn-dark mb-2 ">Send</button>
-        </form>
-    </div>
-
 </body>
 </html>

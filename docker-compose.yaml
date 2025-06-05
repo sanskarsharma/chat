@@ -2,7 +2,7 @@ version: '3.8'
 services:
   
   chat:
-    image: sanskarsharma/chat:v0.4.0
+    build: .
     restart: unless-stopped
     # expose:  # note : this does not open port on host machine, it just exposes the port in docker compose's network. Use "ports" if you need to map host's port to container.
     #   - 8080

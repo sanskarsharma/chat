@@ -4,7 +4,6 @@ WORKDIR /go/src/app
 COPY . .
 
 ENV GOOS=linux \
-    GOARCH=amd64 \
     GOBIN=$GOPATH/bin
 RUN go mod download
 RUN go build -ldflags="-s -w" -o ./bin/main-bin ./*.go

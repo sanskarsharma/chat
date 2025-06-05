@@ -14,5 +14,9 @@ FROM alpine:3.9
 # copying binary built from previous stage
 WORKDIR /usr/bin
 COPY --from=builder /go/src/app/bin /go/bin
+
+# copy the HTML file to the working directory
+COPY --from=builder /go/src/app/chat.html /usr/bin/chat.html
+
 EXPOSE 8080
 ENTRYPOINT /go/bin/main-bin 

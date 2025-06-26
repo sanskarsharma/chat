@@ -3,6 +3,7 @@
 ## Overview
 
 Wedsocket chat server. Completely ephemeral, no logging/storage on server.
+Demo [here](https://chat.pohawithpeanuts.com)
 
 
 ## Usage
@@ -12,14 +13,24 @@ go run *.go
 ```
 ### Running on docker
 ```bash
-docker build -t chat:v-local .
-docker run -d -p 8080:8080 chat:v-local
+docker build -t chat:v0 .
+docker run -d -p 8080:8080 chat:v0
 ```
 
 ### Running with reverse proxy and minimal front-end on docker-compose
 ```bash
-# note : check docker-compose.yaml and modify as required before running this
 docker-compose up -d 
+```
+
+### Deploying using Clouflare {Workers + Containers}
+
+This deploys to your cloudflare account - make sure to edit/remove custom domain in [wrangler.jsonc](wrangler.jsonc) -> `routes` as needed. 
+
+```bash
+# install
+npm install
+npx wrangler deploy
+
 ```
 
 ## Contributing

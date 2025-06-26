@@ -1,0 +1,41 @@
+{
+    "name": "chat-worker",
+    "main": "src/index.ts",
+    "compatibility_date": "2025-05-23",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "observability": {
+        "enabled": true
+    },
+    "containers": [
+        {
+            "name": "chat",
+            "image": "./Dockerfile",
+            "max_instances": 1,
+            "class_name": "ChatContainer" // for ref in cloudflare worker / request handler code
+        }
+    ],
+    "durable_objects": {
+        "bindings": [
+            {
+                "class_name": "ChatContainer",
+                "name": "CHAT_CONTAINER"
+            }
+        ]
+    },
+    "migrations": [
+        {
+            "tag": "v1",
+            "new_sqlite_classes": [
+                "ChatContainer"
+            ]
+        }
+    ],
+    "routes": [
+        {
+            "pattern": "chat.pohawithpeanuts.com",  // add custom domain here, if needed
+            "custom_domain": true
+        }
+    ]
+}

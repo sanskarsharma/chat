@@ -21,6 +21,11 @@ func main() {
 		c.File("chat.html")
 	})
 
+	// HEAD support for monitoring - returns headers without body
+	router.HEAD("/", func(c *gin.Context) {
+		c.Status(200)
+	})
+
 	// Also serve it at /chat for compatibility
 	router.GET("/chat", func(c *gin.Context) {
 		c.File("chat.html")
